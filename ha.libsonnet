@@ -1,5 +1,5 @@
-local devices = import 'devices.json';
-local entities = import 'entities.json';
+local devices = std.extVar('devices');
+local entities = std.extVar('entities');
 
 local devices_by_id = {
   [device.id]: device
