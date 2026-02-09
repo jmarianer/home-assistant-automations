@@ -1,0 +1,20 @@
+{
+  "name": "home-assistant-automations",
+  "version": "1.0.0",
+  "description": "Home Assistant automation scripts",
+  "type": "module",
+  "bin": {},
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "start": "tsc && node build/index.js"
+  },
+  "dependencies": {
+    "ws": "^8.19.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/ws": "^8.18.1",
+    "typescript": "^5.3.0"
+  }
+}
