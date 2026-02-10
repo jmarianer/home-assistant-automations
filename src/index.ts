@@ -119,7 +119,9 @@ try {
   await ha.connect(TOKEN);
   console.log('Connected to Home Assistant');
   await program.parseAsync();
-  await ha.disconnect();
 } catch (error) {
   console.error('Error:', error);
+} finally {
+  await ha.disconnect();
+  console.log('Disconnected from Home Assistant');
 }

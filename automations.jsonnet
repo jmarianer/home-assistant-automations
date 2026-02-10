@@ -1,11 +1,27 @@
 local ha = import 'ha.libsonnet';
 
+local gradual_raise(delay_seconds, delta_brightness) = [
+  ha.actions.input_boolean('input_boolean.light_raise_active', 'turn_on'),
+  ha.actions.repeat(std.floor(255 / delta_brightness), [
+    ha.actions.delay(delay_seconds),
+    ha.actions._if(
+      {
+        condition:"state",
+        entity_id:"input_boolean.light_raise_active",
+        state:"off"
+      },
+      { stop: null }
+    ),
+    ha.actions.switch_on('light.master_bedroom_lights', '{{ (repeat.index * %i) | int }}' % delta_brightness),
+  ]),
+  ha.actions.input_boolean('input_boolean.light_raise_active', 'turn_off'),
+];
+
 [
   ha.automation(
     'Car pico favorite pressed',
     ha.triggers.lutron_press('button.car_pico_stop'),
     ha.actions.cover('cover.athom_garage_door', 'stop')),
-
   ha.automation(
     'Car remote on button',
     ha.triggers.lutron_press('button.car_pico_on'),
@@ -87,40 +103,8 @@ local ha = import 'ha.libsonnet';
       ha.triggers.lutron_press('button.master_bedroom_remote_by_bed_1_raise'),
       ha.triggers.lutron_press('button.master_bedroom_remote_by_bed_2_raise'),
     ],
-    [
-      ha.actions.input_boolean('input_boolean.light_raise_active', 'turn_on'),
-      {
-        "repeat": {
-          "while": [
-            {
-              "condition": "template",
-              "value_template": "{% set current = state_attr('light.master_bedroom_lights', 'brightness') | int(0) %} {{ current < 255 }}\n"
-            },
-            {
-              "condition": "state",
-              "entity_id": "input_boolean.light_raise_active",
-              "state": "on"
-            }
-          ],
-          "sequence": [
-            {
-              "target": {
-                "entity_id": "light.master_bedroom_lights"
-              },
-              "data": {
-                "brightness": "{% set current = state_attr('light.master_bedroom_lights', 'brightness') %} {% if current is none %}\n  {% set current = 0 %}\n{% endif %} {% set new_brightness = current | int + 5 %} {% if new_brightness > 255 %}\n  255\n{% else %}\n  {{ new_brightness }}\n{% endif %}\n"
-              },
-              "action": "light.turn_on"
-            },
-            {
-              "delay": "00:00:01"
-            }
-          ]
-        }
-      },
-      ha.actions.input_boolean('input_boolean.light_raise_active', 'turn_off'),
-    ]
-    ),
+    gradual_raise(1, 8),
+  ),
   ha.automation(
     'Car remote "lower"',
     ha.triggers.lutron_press('button.car_pico_lower'),
@@ -128,5 +112,13 @@ local ha = import 'ha.libsonnet';
       ha.actions.cover('cover.athom_garage_door', 'close'),
       ha.actions.switch_off('switch.garage_main_lights'),
     ]
+  ),
+  ha.automation(
+    'Sunrise alarm',
+    {
+      platform: 'time',
+      at: 'input_datetime.wake_up',
+    },
+    gradual_raise(1, 1),
   ),
 ]

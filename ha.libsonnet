@@ -38,11 +38,12 @@ local normalize = function(value)
       entity_id: entities_by_id[entity_id].id,
       type: action_type,
     },
-    switch_on(entity_id):: {
-      device_id: entities_by_id[entity_id].device_id,
-      domain: 'switch',
-      entity_id: entities_by_id[entity_id].id,
-      type: 'turn_on',
+    switch_on(entity_id, brightness=null):: {
+      target: {
+        entity_id: entity_id
+      },
+      action: 'light.turn_on',
+      data: if brightness != null then { brightness: brightness } else {},
     },
     switch_off(entity_id):: {
       device_id: entities_by_id[entity_id].device_id,
@@ -73,6 +74,21 @@ local normalize = function(value)
         entity_id: entity_id,
       },
       action: 'input_boolean.' + action_type,
+    },
+    delay(seconds):: {
+      delay: {
+        seconds: seconds
+      },
+    },
+    repeat(count, sequence):: {
+      repeat: {
+        count: count,
+        sequence: sequence,
+      },
+    },
+    _if(condition, then_action):: {
+      'if': [condition],
+      'then': then_action,
     },
   },
 
