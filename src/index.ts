@@ -4,6 +4,7 @@ import * as yaml from 'yaml';
 import * as fs from 'fs/promises';
 import { spawn } from 'child_process';
 import { Writable } from 'stream';
+import { Command } from 'commander';
 
 function jdDiff(a: string, b: string): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -64,22 +65,61 @@ class HAClient {
 }
 
 const TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJiZjY1N2YyOTkzMmI0MDljYWU5ZGZhZDI4MWFkNzUxNSIsImlhdCI6MTc3MDUzNDA3NiwiZXhwIjoyMDg1ODk0MDc2fQ.hKpN8XveDKdcMdHG0LeSLHXDM_BnzrMRWHR6qQ7D6H0";
-
 const ha = new HAClient();
-await ha.connect(TOKEN);
-const devices = await ha.getDevices();
-const entities = await ha.getEntities();
-// console.log(entities.result.filter((x: any) => x.platform === 'automation'));//.map((x: any) => x.entity_id));
 
-const jsonnet = new Jsonnet();
-const newAutomations = await jsonnet
-  .extCode('devices', JSON.stringify(devices))
-  .extCode('entities', JSON.stringify(entities))
-  .evaluateFile('automations.jsonnet');
+async function generateAutomations(): Promise<string> {
+  const devices = await ha.getDevices();
+  const entities = await ha.getEntities();
 
-const automationsYaml = await fs.readFile('/Volumes/config/automations.yaml', 'utf-8');
-const existingAutomations = yaml.parse(automationsYaml);
+  const jsonnet = new Jsonnet();
+  const newAutomations = await jsonnet
+    .extCode('devices', JSON.stringify(devices))
+    .extCode('entities', JSON.stringify(entities))
+    .evaluateFile('automations.jsonnet');
 
-console.log(await jdDiff(JSON.stringify(existingAutomations), newAutomations));
+  return newAutomations;
+}
 
-await ha.disconnect();
+async function runDeploy(): Promise<void> {
+  const newAutomations = await generateAutomations();
+  await fs.writeFile('/Volumes/config/automations.yaml', newAutomations);
+  await ha.getResponse({
+    type: 'call_service',
+    domain: 'automation',
+    service: 'reload'
+  });
+}
+
+async function runDiff(): Promise<void> {
+  const newAutomations = await generateAutomations();
+  const existingAutomationsYaml = await fs.readFile('/Volumes/config/automations.yaml', 'utf-8');
+  const existingAutomations = yaml.parse(existingAutomationsYaml);
+
+  console.log('Diff between existing and generated automations:');
+  console.log(await jdDiff(JSON.stringify(existingAutomations), newAutomations));
+}
+
+const program = new Command();
+program
+  .name('ha-automations')
+  .description('Home Assistant automations management')
+  .version('1.0.0');
+
+program
+  .command('deploy')
+  .description('Generate automations from jsonnet')
+  .action(runDeploy);
+
+program
+  .command('diff')
+  .description('Show diff between existing and generated automations')
+  .action(runDiff);
+
+try {
+  await ha.connect(TOKEN);
+  console.log('Connected to Home Assistant');
+  await program.parseAsync();
+  await ha.disconnect();
+} catch (error) {
+  console.error('Error:', error);
+}
