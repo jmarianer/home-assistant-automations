@@ -12,7 +12,7 @@ local gradual_raise(delay_seconds, delta_brightness) = [
       },
       { stop: null }
     ),
-    ha.actions.switch_on('light.master_bedroom_lights', '{{ (repeat.index * %i) | int }}' % delta_brightness),
+    ha.actions.light_on('light.master_bedroom_lights', '{{ (repeat.index * %i) | int }}' % delta_brightness),
   ]),
   ha.actions.input_boolean('input_boolean.light_raise_active', 'turn_off'),
 ];
@@ -119,6 +119,6 @@ local gradual_raise(delay_seconds, delta_brightness) = [
       platform: 'time',
       at: 'input_datetime.wake_up',
     },
-    gradual_raise(1, 1),
+    gradual_raise(7, 1),
   ),
 ]
