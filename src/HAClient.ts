@@ -6,10 +6,10 @@ export class HAClient {
   private token: string;
   private baseUrl: string;
 
-  constructor(token: string, baseUrl: string = 'http://homeassistant.local:8123') {
+  constructor(baseUrl: string, token: string) {
     this.token = token;
     this.baseUrl = baseUrl;
-    this.ws = new WebSocketClient(`${baseUrl.replace('http', 'ws')}/api/websocket`);
+    this.ws = new WebSocketClient(`${baseUrl.replace(/^http/, 'ws')}/api/websocket`);
   }
 
   async connect() {
@@ -25,9 +25,17 @@ export class HAClient {
     this.ws.close();
   }
 
-  async getResponse(request: object): Promise<any> {
+  private async getResponse(request: object): Promise<any> {
     this.ws.send({ id: this.counter++, ...request });
     return await this.ws.recv();
+  }
+
+  async getAutomationConfig(entity_id: string): Promise<any> {
+    return await this.getResponse({ type: 'automation/config', entity_id });
+  }
+
+  async removeEntity(entity_id: string): Promise<any> {
+    return await this.getResponse({ type: 'config/entity_registry/remove', entity_id });
   }
 
   async getDevices(): Promise<any> {
@@ -38,7 +46,7 @@ export class HAClient {
     return await this.getResponse({ type: 'config/entity_registry/list' });
   }
 
-  async callApi(
+  private async callApi(
     method: "GET" | "POST" | "PUT" | "DELETE",
     path: string,
     parameters?: Record<string, any>
@@ -69,5 +77,9 @@ export class HAClient {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
     return await response.json();
+  }
+
+  async createOrUpdateAutomation(id: string, config: object): Promise<any> {
+    return await this.callApi("POST", `/api/config/automation/config/${id}`, config);
   }
 }

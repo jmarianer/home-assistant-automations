@@ -29,7 +29,7 @@ function jdDiff(a: string, b: string): Promise<string> {
 }
 
 const TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJiZjY1N2YyOTkzMmI0MDljYWU5ZGZhZDI4MWFkNzUxNSIsImlhdCI6MTc3MDUzNDA3NiwiZXhwIjoyMDg1ODk0MDc2fQ.hKpN8XveDKdcMdHG0LeSLHXDM_BnzrMRWHR6qQ7D6H0";
-const ha = new HAClient(TOKEN);
+const ha = new HAClient('http://homeassistant.local:8123', TOKEN);
 
 async function generateAutomations(): Promise<Record<string, any>> {
   const devices = await ha.getDevices();
@@ -67,7 +67,7 @@ async function getExistingAutomations(): Promise<Record<string, object>> {
 
   const automations: Record<string, object> = {};
   for (const entity_id of automationNames) {
-    const details = await ha.getResponse({ type: 'automation/config', entity_id: `${entity_id}` });
+    const details = await ha.getAutomationConfig(entity_id);
     automations[entity_id] = details.result.config;
   }
 
@@ -86,13 +86,13 @@ async function runDeploy(): Promise<void> {
   const existingAutomations = await getExistingAutomationNames();
   for (const id of existingAutomations) {
     console.log(`Removing existing automation ${id}...`);
-    console.log(await ha.getResponse({ type: 'config/entity_registry/remove', entity_id: `${id}` }));
+    console.log(await ha.removeEntity(id));
   }
 
   const newAutomations = await generateAutomations();
   for (const [id, automation] of Object.entries(newAutomations)) {
     console.log(`Deploying automation ${id}...`);
-    console.log(await ha.callApi("POST", `/api/config/automation/config/${id}`, automation));
+    console.log(await ha.createOrUpdateAutomation(id, automation));
   }
 }
 
