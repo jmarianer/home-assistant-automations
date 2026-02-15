@@ -28,10 +28,10 @@ function jdDiff(a: string, b: string): Promise<string> {
   });
 }
 
-const TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJiZjY1N2YyOTkzMmI0MDljYWU5ZGZhZDI4MWFkNzUxNSIsImlhdCI6MTc3MDUzNDA3NiwiZXhwIjoyMDg1ODk0MDc2fQ.hKpN8XveDKdcMdHG0LeSLHXDM_BnzrMRWHR6qQ7D6H0";
-const ha = new HAClient('http://homeassistant.local:8123', TOKEN);
+// HAClient will be initialized after parsing command-line arguments
+let ha: HAClient | undefined;
 
-async function generateAutomations(): Promise<Record<string, any>> {
+async function generateAutomations(ha: HAClient): Promise<Record<string, any>> {
   const devices = await ha.getDevices();
   const entities = await ha.getEntities();
 
@@ -55,15 +55,15 @@ async function generateAutomations(): Promise<Record<string, any>> {
   return newAutomationsById;
 }
 
-async function getExistingAutomationNames(): Promise<string[]> {
+async function getExistingAutomationNames(ha: HAClient): Promise<string[]> {
   const entities = await ha.getEntities();
   return entities.result
     .map((entity: any) => entity.entity_id)
     .filter((entity_id: string) => entity_id.startsWith('automation.'));
 }
 
-async function getExistingAutomations(): Promise<Record<string, object>> {
-  const automationNames = await getExistingAutomationNames();
+async function getExistingAutomations(ha: HAClient): Promise<Record<string, object>> {
+  const automationNames = await getExistingAutomationNames(ha);
 
   const automations: Record<string, object> = {};
   for (const entity_id of automationNames) {
@@ -74,22 +74,21 @@ async function getExistingAutomations(): Promise<Record<string, object>> {
   return automations;
 }
 
-
-async function runDiff(): Promise<void> {
-  const existingAutomations = await getExistingAutomations();
-  const newAutomations = await generateAutomations();
+async function runDiff(ha: HAClient): Promise<void> {
+  const existingAutomations = await getExistingAutomations(ha);
+  const newAutomations = await generateAutomations(ha);
   console.log('Diff between existing and generated automations:');
   console.log(await jdDiff(JSON.stringify(existingAutomations), JSON.stringify(newAutomations)));
 }
 
-async function runDeploy(): Promise<void> {
-  const existingAutomations = await getExistingAutomationNames();
+async function runDeploy(ha: HAClient): Promise<void> {
+  const existingAutomations = await getExistingAutomationNames(ha);
   for (const id of existingAutomations) {
     console.log(`Removing existing automation ${id}...`);
     console.log(await ha.removeEntity(id));
   }
 
-  const newAutomations = await generateAutomations();
+  const newAutomations = await generateAutomations(ha);
   for (const [id, automation] of Object.entries(newAutomations)) {
     console.log(`Deploying automation ${id}...`);
     console.log(await ha.createOrUpdateAutomation(id, automation));
@@ -100,25 +99,42 @@ const program = new Command();
 program
   .name('ha-automations')
   .description('Home Assistant automations management')
-  .version('1.0.0');
+  .version('1.0.0')
+  .option('--base-url <url>', 'Home Assistant base URL', process.env.HA_BASE_URL || 'http://homeassistant.local:8123')
+  .option('--token <token>', 'Home Assistant long-lived access token', process.env.HA_TOKEN);
 
 program
   .command('deploy')
   .description('Generate automations from jsonnet')
-  .action(runDeploy);
+  .action(() => runDeploy(ha!));
 
 program
   .command('diff')
   .description('Show diff between existing and generated automations')
-  .action(runDiff);
+  .action(() => runDiff(ha!));
 
-try {
+// Initialize HAClient before any command action runs
+program.hook('preAction', async () => {
+  const options = program.opts();
+
+  if (!options.token) {
+    console.error('Error: Token is required. Provide via --token flag or HA_TOKEN environment variable');
+    process.exit(1);
+  }
+
+  ha = new HAClient(options.baseUrl, options.token);
   await ha.connect();
   console.log('Connected to Home Assistant');
+});
+
+try {
   await program.parseAsync();
 } catch (error) {
   console.error('Error:', error);
+  process.exit(1);
 } finally {
-  await ha.disconnect();
-  console.log('Disconnected from Home Assistant');
+  if (ha) {
+    await ha.disconnect();
+    console.log('Disconnected from Home Assistant');
+  }
 }
