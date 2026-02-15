@@ -1,9 +1,16 @@
 local ha = import 'ha.libsonnet';
 
-local gradual_raise(delay_seconds, delta_brightness) = [
+local gradual_raise(time_in_seconds) = [
   ha.actions.input_boolean('input_boolean.light_raise_active', 'turn_on'),
-  ha.actions.repeat(std.floor(255 / delta_brightness), [
-    ha.actions.delay(delay_seconds),
+  /*
+  Start at brightness 0. End at brightness 255 after time_in_seconds.
+  Every second the brightness should increase but much slower at the beginning
+  and faster towards the end, so that it feels more natural. A possible formula
+  for this is:
+    brightness = 255 * (t / time_in_seconds) ^ 2
+  */
+  ha.actions.repeat(time_in_seconds, [
+    ha.actions.delay(1),
     ha.actions._if(
       {
         condition:"state",
@@ -12,7 +19,8 @@ local gradual_raise(delay_seconds, delta_brightness) = [
       },
       { stop: null }
     ),
-    ha.actions.light_on('light.master_bedroom_lights', '{{ (repeat.index * %i) | int }}' % delta_brightness),
+    ha.actions.light_on('light.master_bedroom_lights', '{{ (255 * ((repeat.index / %i) ** 2)) | int }}' % time_in_seconds),
+
   ]),
   ha.actions.input_boolean('input_boolean.light_raise_active', 'turn_off'),
 ];
@@ -103,7 +111,7 @@ local gradual_raise(delay_seconds, delta_brightness) = [
       ha.triggers.lutron_press('button.master_bedroom_remote_by_bed_1_raise'),
       ha.triggers.lutron_press('button.master_bedroom_remote_by_bed_2_raise'),
     ],
-    gradual_raise(1, 8),
+    gradual_raise(30),
   ),
   ha.automation(
     'Car remote "lower"',
@@ -119,6 +127,6 @@ local gradual_raise(delay_seconds, delta_brightness) = [
       platform: 'time',
       at: 'input_datetime.wake_up',
     },
-    gradual_raise(7, 1),
+    gradual_raise(1800),
   ),
 ]
