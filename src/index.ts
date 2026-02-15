@@ -1,10 +1,9 @@
-import { WebSocketClient } from './WebSocketClient.js';
 import { Jsonnet } from '@hanazuki/node-jsonnet';
-import * as yaml from 'yaml';
-import * as fs from 'fs/promises';
 import { spawn } from 'child_process';
 import { Writable } from 'stream';
 import { Command } from 'commander';
+import slug from 'slug';
+import { HAClient } from './HAClient.js';
 
 function jdDiff(a: string, b: string): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -29,74 +28,72 @@ function jdDiff(a: string, b: string): Promise<string> {
   });
 }
 
-class HAClient {
-  private ws: WebSocketClient;
-  private counter: number = 1;
-  
-  constructor() {
-    this.ws = new WebSocketClient('ws://homeassistant.local:8123/api/websocket');
-  }
-
-  async connect(token: string) {
-    await this.ws.open();
-    await this.ws.recv();
-    // TODO if message.type !== auth_required throw error
-    this.ws.send({ type: 'auth', access_token: token });
-    await this.ws.recv();
-    // TODO if message.type !== auth_ok throw error
-  }
-
-  async disconnect() {
-    this.ws.close();
-  }
-
-  async getResponse(request: object): Promise<any> {
-    this.ws.send({ id: this.counter++, ...request });
-    return await this.ws.recv();
-  }
-
-  async getDevices(): Promise<any> {
-    return await this.getResponse({ type: 'config/device_registry/list' });
-  }
-
-  async getEntities(): Promise<any> {
-    return await this.getResponse({ type: 'config/entity_registry/list' });
-  }
-}
-
 const TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJiZjY1N2YyOTkzMmI0MDljYWU5ZGZhZDI4MWFkNzUxNSIsImlhdCI6MTc3MDUzNDA3NiwiZXhwIjoyMDg1ODk0MDc2fQ.hKpN8XveDKdcMdHG0LeSLHXDM_BnzrMRWHR6qQ7D6H0";
-const ha = new HAClient();
+const ha = new HAClient(TOKEN);
 
-async function generateAutomations(): Promise<string> {
+async function generateAutomations(): Promise<Record<string, any>> {
   const devices = await ha.getDevices();
   const entities = await ha.getEntities();
 
   const jsonnet = new Jsonnet();
-  const newAutomations = await jsonnet
+  const newAutomationsString = await jsonnet
     .extCode('devices', JSON.stringify(devices))
     .extCode('entities', JSON.stringify(entities))
+    .nativeCallback('slug', (str) => slug(String(str), '_'), 'string')
     .evaluateFile('automations.jsonnet');
 
-  return newAutomations;
+  const newAutomations = JSON.parse(newAutomationsString);
+  const newAutomationsById: Record<string, any> = {};
+  for (const automation of newAutomations) {
+    const id = automation.id;
+    if (!id) {
+      throw new Error(`Automation missing id: ${JSON.stringify(automation)}`);
+    }
+    newAutomationsById[id] = automation;
+  }
+
+  return newAutomationsById;
+}
+
+async function getExistingAutomationNames(): Promise<string[]> {
+  const entities = await ha.getEntities();
+  return entities.result
+    .map((entity: any) => entity.entity_id)
+    .filter((entity_id: string) => entity_id.startsWith('automation.'));
+}
+
+async function getExistingAutomations(): Promise<Record<string, object>> {
+  const automationNames = await getExistingAutomationNames();
+
+  const automations: Record<string, object> = {};
+  for (const entity_id of automationNames) {
+    const details = await ha.getResponse({ type: 'automation/config', entity_id: `${entity_id}` });
+    automations[entity_id] = details.result.config;
+  }
+
+  return automations;
+}
+
+
+async function runDiff(): Promise<void> {
+  const existingAutomations = await getExistingAutomations();
+  const newAutomations = await generateAutomations();
+  console.log('Diff between existing and generated automations:');
+  console.log(await jdDiff(JSON.stringify(existingAutomations), JSON.stringify(newAutomations)));
 }
 
 async function runDeploy(): Promise<void> {
-  const newAutomations = await generateAutomations();
-  await fs.writeFile('/Volumes/config/automations.yaml', newAutomations);
-  await ha.getResponse({
-    type: 'call_service',
-    domain: 'automation',
-    service: 'reload'
-  });
-}
+  const existingAutomations = await getExistingAutomationNames();
+  for (const id of existingAutomations) {
+    console.log(`Removing existing automation ${id}...`);
+    console.log(await ha.getResponse({ type: 'config/entity_registry/remove', entity_id: `${id}` }));
+  }
 
-async function runDiff(): Promise<void> {
   const newAutomations = await generateAutomations();
-  const existingAutomationsYaml = await fs.readFile('/Volumes/config/automations.yaml', 'utf-8');
-  const existingAutomations = yaml.parse(existingAutomationsYaml);
-
-  console.log('Diff between existing and generated automations:');
-  console.log(await jdDiff(JSON.stringify(existingAutomations), newAutomations));
+  for (const [id, automation] of Object.entries(newAutomations)) {
+    console.log(`Deploying automation ${id}...`);
+    console.log(await ha.callApi("POST", `/api/config/automation/config/${id}`, automation));
+  }
 }
 
 const program = new Command();
@@ -116,7 +113,7 @@ program
   .action(runDiff);
 
 try {
-  await ha.connect(TOKEN);
+  await ha.connect();
   console.log('Connected to Home Assistant');
   await program.parseAsync();
 } catch (error) {

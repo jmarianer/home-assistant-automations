@@ -15,9 +15,6 @@ local normalize = function(value)
   if std.isArray(value) then value else [value];
 
 {
-  device_by_id(id):: devices_by_id[id],
-  entity_by_id(id):: entities_by_id[id],
-
   triggers: {
     lutron_press(entity_id)::
       local entity = entities_by_id[entity_id];
@@ -100,6 +97,7 @@ local normalize = function(value)
 
   automation(alias, trigger, action):: {
     alias: alias,
+    id: 'automation.' + std.native('slug')(alias),
     triggers: normalize(trigger),
     actions: normalize(action),
     conditions: [],
