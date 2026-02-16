@@ -14,11 +14,20 @@ export class HAClient {
 
   async connect() {
     await this.ws.open();
-    await this.ws.recv();
-    // TODO if message.type !== auth_required throw error
+    const authRequiredMsg = await this.ws.recv();
+    if (authRequiredMsg.type !== 'auth_required') {
+      throw new Error(`Expected auth_required, got ${authRequiredMsg.type}`);
+    }
+
     this.ws.send({ type: 'auth', access_token: this.token });
-    await this.ws.recv();
-    // TODO if message.type !== auth_ok throw error
+    const authResponseMsg = await this.ws.recv();
+
+    if (authResponseMsg.type === 'auth_invalid') {
+      throw new Error('Authentication failed: Invalid access token');
+    }
+    if (authResponseMsg.type !== 'auth_ok') {
+      throw new Error(`Expected auth_ok, got ${authResponseMsg.type}`);
+    }
   }
 
   async disconnect() {
