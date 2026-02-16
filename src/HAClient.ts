@@ -25,7 +25,7 @@ export class HAClient {
     this.ws.close();
   }
 
-  private async getResponse(request: object): Promise<any> {
+  async getResponse(request: object): Promise<any> {
     this.ws.send({ id: this.counter++, ...request });
     return await this.ws.recv();
   }

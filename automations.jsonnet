@@ -26,6 +26,8 @@ local gradual_raise(time_in_seconds) = [
 ];
 
 [
+  ha.boolean_helper('light_raise_active', false, 'Indicates whether the gradual light raise is active.'),
+  ha.time_helper('wake_up', 'Time for sunrise alarm.'),
   ha.automation(
     'Car pico favorite pressed',
     ha.triggers.lutron_press('button.car_pico_stop'),

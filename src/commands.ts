@@ -1,14 +1,21 @@
 import { getExistingAutomations, getExistingAutomationNames } from './automations.js';
 import { HAClient } from './HAClient.js';
+import { getExistingHelpers } from './helpers.js';
 import { jdDiff } from './jdDiff.js';
 import { JsonnetEvaluator } from './JsonnetEvaluator.js';
 
 export async function runDiff(ha: HAClient): Promise<void> {
-  const existingAutomations = await getExistingAutomations(ha);
   const evaluator = new JsonnetEvaluator(ha, 'automations.jsonnet');
+
+  const existingAutomations = await getExistingAutomations(ha);
   const newAutomations = await evaluator.getAutomations();
   console.log('Diff between existing and generated automations:');
   console.log(await jdDiff(JSON.stringify(existingAutomations), JSON.stringify(newAutomations)));
+
+  const existingHelpers = await getExistingHelpers(ha);
+  const newHelpers = await evaluator.getHelpers();
+  console.log('Diff between existing and generated helpers:');
+  console.log(await jdDiff(JSON.stringify(existingHelpers), JSON.stringify(newHelpers)));
 }
 
 export async function runDeploy(ha: HAClient): Promise<void> {

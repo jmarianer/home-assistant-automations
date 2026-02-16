@@ -104,4 +104,17 @@ local normalize = function(value)
     description: '',
     mode: 'single',
   },
+
+  boolean_helper(name, default, description):: {
+    id: 'input_boolean.' + name,
+    name: description,
+    // initial: default,
+  },
+
+  time_helper(name, description):: {
+    id: 'input_datetime.' + name,
+    name: description,
+    has_date: false,
+    has_time: true,
+  },
 }
