@@ -95,11 +95,9 @@ export class HAClient {
   async createHelper(id: string, config: any): Promise<any> {
     const type = config.id.split('.')[0];
     const { id: _, ...configWithoutId } = config;
-    const message = {
-      type: `${type}/create`,
-      ...configWithoutId,
-    };
-    console.log(message);
-    return await this.getResponse(message);
+    return await this.getResponse({
+        type: `${type}/create`,
+        ...configWithoutId,
+      });
   }
 }
