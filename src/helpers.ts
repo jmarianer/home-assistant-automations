@@ -10,7 +10,10 @@ export async function getExistingHelperNames(ha: HAClient): Promise<string[]> {
 export async function getExistingHelpers(ha: HAClient): Promise<Record<string, object>> {
   const helpers: Record<string, object> = {};
 
-  for (const helperType of ['input_boolean', 'input_button', 'input_datetime']) {
+  for (const helperType of [
+    'input_boolean', 'input_button', 'input_datetime',
+    'input_number', 'input_select', 'input_text',
+  ]) {
     const helpersList = await ha.getResponse({ type: `${helperType}/list` });
 
     for (const helper of helpersList.result) {

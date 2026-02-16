@@ -105,15 +105,14 @@ local normalize = function(value)
     mode: 'single',
   },
 
-  boolean_helper(name, default, description):: {
-    id: 'input_boolean.' + name,
-    name: description,
-    // initial: default,
+  boolean_helper(name, default, _description):: {
+    id: 'input_boolean.' + std.native('slug')(name),
+    name: name,
   },
 
-  time_helper(name, description):: {
-    id: 'input_datetime.' + name,
-    name: description,
+  time_helper(name, _description):: {
+    id: 'input_datetime.' + std.native('slug')(name),
+    name: name,
     has_date: false,
     has_time: true,
   },

@@ -82,4 +82,24 @@ export class HAClient {
   async createOrUpdateAutomation(id: string, config: object): Promise<any> {
     return await this.callApi("POST", `/api/config/automation/config/${id}`, config);
   }
+
+  async removeHelper(id: string): Promise<any> {
+    const type = id.split('.')[0];
+    const name = id.split('.')[1];
+    return await this.getResponse({
+      type: `${type}/delete`,
+      [`${type}_id`]: name,
+    });
+  }
+
+  async createHelper(id: string, config: any): Promise<any> {
+    const type = config.id.split('.')[0];
+    const { id: _, ...configWithoutId } = config;
+    const message = {
+      type: `${type}/create`,
+      ...configWithoutId,
+    };
+    console.log(message);
+    return await this.getResponse(message);
+  }
 }
