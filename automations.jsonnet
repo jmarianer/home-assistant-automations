@@ -123,12 +123,14 @@ local gradual_raise(time_in_seconds) = [
       ha.actions.switch_off('switch.garage_main_lights'),
     ]
   ),
-  ha.automation(
-    'Sunrise alarm',
-    {
-      platform: 'time',
-      at: 'input_datetime.wake_up',
-    },
-    gradual_raise(1800),
-  ),
+# This doesn't wake me up and it wakes my wife up too early. Experiment tried,
+# lesson learned. :)
+# ha.automation(
+#   'Sunrise alarm',
+#   {
+#     platform: 'time',
+#     at: 'input_datetime.wake_up',
+#   },
+#   gradual_raise(1800),
+# ),
 ]
