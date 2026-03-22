@@ -84,6 +84,7 @@ local gradual_raise(time_in_seconds) = [
     [
       ha.triggers.lutron_press('button.living_room_lights_remote_left_on'),
       ha.triggers.lutron_press('button.living_room_lights_remote_right_on'),
+      ha.triggers.lutron_press('button.living_room_living_room_wall_switch_on'),
     ],
     [
       ha.actions.scene('scene.main_on'),
@@ -93,6 +94,7 @@ local gradual_raise(time_in_seconds) = [
     [
       ha.triggers.lutron_press('button.living_room_lights_remote_left_off'),
       ha.triggers.lutron_press('button.living_room_lights_remote_right_off'),
+      ha.triggers.lutron_press('button.living_room_living_room_wall_switch_off'),
     ],
     [
       ha.actions.scene('scene.main_off'),
