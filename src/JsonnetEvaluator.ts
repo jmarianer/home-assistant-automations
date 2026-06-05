@@ -1,6 +1,6 @@
 import { Jsonnet } from '@hanazuki/node-jsonnet';
 import slug from 'slug';
-import { HAClient } from './HAClient.js';
+import { Transport } from './Transport.js';
 
 export class JsonnetEvaluator {
   private _parsedPromise: Promise<void>;
@@ -8,13 +8,13 @@ export class JsonnetEvaluator {
   private _helpersById: Record<string, any> = {};
   private _templatesById: Record<string, any> = {};
 
-  constructor(private ha: HAClient, private filename: string) {
+  constructor(private transport: Transport, private filename: string) {
     this._parsedPromise = this.doParse();
   }
 
   private async doParse(): Promise<void> {
-    const devices = await this.ha.getDevices();
-    const entities = await this.ha.getEntities();
+    const devices = await this.transport.getDevices();
+    const entities = await this.transport.getEntities();
 
     const jsonnet = new Jsonnet();
     const parsedJsonnet = await jsonnet
