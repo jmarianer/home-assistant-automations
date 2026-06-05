@@ -116,4 +116,10 @@ local normalize = function(value)
     has_date: false,
     has_time: true,
   },
+
+  template_helper(name, template, _icon):: {
+    id: 'sensor.' + std.native('slug')(name),
+    name: name,
+    state: template,
+  },
 }

@@ -6,6 +6,7 @@ export class JsonnetEvaluator {
   private _parsedPromise: Promise<void>;
   private _automationsById: Record<string, any> = {};
   private _helpersById: Record<string, any> = {};
+  private _templatesById: Record<string, any> = {};
 
   constructor(private ha: HAClient, private filename: string) {
     this._parsedPromise = this.doParse();
@@ -28,11 +29,14 @@ export class JsonnetEvaluator {
       if (!id) {
         throw new Error(`Element missing id: ${JSON.stringify(element)}`);
       }
-      if (element.id.startsWith('automation.')) {
+      if (id.startsWith('automation.')) {
         this._automationsById[id] = element;
       }
       if (id.startsWith('input_')) {
         this._helpersById[id] = element;
+      }
+      if (id.startsWith('sensor.')) {
+        this._templatesById[id] = element;
       }
     }
   }
@@ -45,5 +49,10 @@ export class JsonnetEvaluator {
   public async getHelpers(): Promise<Record<string, any>> {
     await this._parsedPromise;
     return this._helpersById;
+  }
+
+  public async getTemplates(): Promise<Record<string, any>> {
+    await this._parsedPromise;
+    return this._templatesById;
   }
 }

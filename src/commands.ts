@@ -1,6 +1,6 @@
 import { getExistingAutomations, getExistingAutomationNames } from './automations.js';
 import { HAClient } from './HAClient.js';
-import { getExistingHelpers } from './helpers.js';
+import { getExistingHelpers, getExistingTemplates } from './helpers.js';
 import { jdDiff } from './jdDiff.js';
 import { JsonnetEvaluator } from './JsonnetEvaluator.js';
 
@@ -16,6 +16,11 @@ export async function runDiff(ha: HAClient): Promise<void> {
   const newHelpers = await evaluator.getHelpers();
   console.log('Diff between existing and generated helpers:');
   console.log(await jdDiff(JSON.stringify(existingHelpers), JSON.stringify(newHelpers)));
+
+  const existingTemplates = await getExistingTemplates(ha);
+  const newTemplates = await evaluator.getTemplates();
+  console.log('Diff between existing and generated templates:');
+  console.log(await jdDiff(JSON.stringify(existingTemplates), JSON.stringify(newTemplates)));
 }
 
 export async function runDeploy(ha: HAClient): Promise<void> {
@@ -43,5 +48,17 @@ export async function runDeploy(ha: HAClient): Promise<void> {
   for (const [id, helper] of Object.entries(newHelpers)) {
     console.log(`Deploying helper ${id}...`);
     console.log(await ha.createHelper(id, helper));
+  }
+
+  const existingTemplates = await getExistingTemplates(ha);
+  for (const id of Object.keys(existingTemplates)) {
+    console.log(`Removing existing template ${id}...`);
+    console.log(await ha.removeTemplate(id));
+  }
+
+  const newTemplates = await evaluator.getTemplates();
+  for (const [id, template] of Object.entries(newTemplates)) {
+    console.log(`Deploying template ${id}...`);
+    console.log(await ha.createTemplate(template));
   }
 }

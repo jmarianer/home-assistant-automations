@@ -55,7 +55,7 @@ export class HAClient {
     return await this.getResponse({ type: 'config/entity_registry/list' });
   }
 
-  private async callApi(
+  async callApi(
     method: "GET" | "POST" | "PUT" | "DELETE",
     path: string,
     parameters?: Record<string, any>
@@ -108,5 +108,27 @@ export class HAClient {
         type: `${type}/create`,
         ...configWithoutId,
       });
+  }
+
+  async removeTemplate(entry_id: string): Promise<any> {
+    return await this.getResponse({
+      type: 'config_entries/remove',
+      entry_id,
+    });
+  }
+
+  async createTemplate(config: any): Promise<any> {
+    const { subtype, id, ...userInput } = config;
+
+    const init = await this.callApi('POST', '/api/config/config_entries/flow', {
+      handler: 'template',
+    });
+    const flowId = init.flow_id;
+
+    await this.callApi('POST', `/api/config/config_entries/flow/${flowId}`, {
+      next_step_id: 'sensor',
+    });
+
+    return await this.callApi('POST', `/api/config/config_entries/flow/${flowId}`, userInput);
   }
 }
