@@ -1,4 +1,5 @@
 import { WebSocketClient } from './WebSocketClient.js';
+import { formatWithMarker } from './utils.js';
 
 export class HAClient {
   private ws: WebSocketClient;
@@ -79,7 +80,10 @@ export class HAClient {
     }
 
     if (this.verbose) {
-      console.error(`[HTTP] --> ${method} ${url}`, options.body ?? '');
+      console.error(`[HTTP] --> ${method} ${url}`);
+      if (options.body) {
+        console.error(formatWithMarker('[HTTP]', options.body as string));
+      }
     }
 
     const response = await fetch(url, options);
@@ -92,7 +96,8 @@ export class HAClient {
 
     const json = await response.json();
     if (this.verbose) {
-      console.error(`[HTTP] <-- ${method} ${url} ${response.status}`, JSON.stringify(json));
+      console.error(`[HTTP] <-- ${method} ${url} ${response.status}`);
+      console.error(formatWithMarker('[HTTP]', json));
     }
     return json;
   }

@@ -1,4 +1,5 @@
 import WebSocket from 'ws';
+import { formatWithMarker } from './utils.js';
 
 export class WebSocketClient {
   private ws: WebSocket;
@@ -13,7 +14,8 @@ export class WebSocketClient {
     this.ws.on('message', (data: WebSocket.Data) => {
       const msg = data.toString();
       if (this.verbose) {
-        console.error('[WS] <--', msg);
+        console.error('[WS] <--');
+        console.error(formatWithMarker('[WS]', msg));
       }
 
       if (this.waiters.length > 0) {
@@ -43,7 +45,8 @@ export class WebSocketClient {
   send(data: object): void {
     const serialized = JSON.stringify(data);
     if (this.verbose) {
-      console.error('[WS] -->', serialized);
+      console.error('[WS] -->');
+      console.error(formatWithMarker('[WS]', serialized));
     }
     this.ws.send(serialized);
   }
