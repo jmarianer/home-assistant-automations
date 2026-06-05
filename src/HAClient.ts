@@ -5,11 +5,13 @@ export class HAClient {
   private counter: number = 1;
   private token: string;
   private baseUrl: string;
+  private verbose: boolean;
 
-  constructor(baseUrl: string, token: string) {
+  constructor(baseUrl: string, token: string, verbose: boolean = false) {
     this.token = token;
     this.baseUrl = baseUrl;
-    this.ws = new WebSocketClient(`${baseUrl.replace(/^http/, 'ws')}/api/websocket`);
+    this.verbose = verbose;
+    this.ws = new WebSocketClient(`${baseUrl.replace(/^http/, 'ws')}/api/websocket`, verbose);
   }
 
   async connect() {
@@ -60,7 +62,7 @@ export class HAClient {
     path: string,
     parameters?: Record<string, any>
   ): Promise<any> {
-    const url = `${this.baseUrl}${path}`;
+    let url = `${this.baseUrl}${path}`;
     const options: RequestInit = {
       method,
       headers: {
@@ -73,19 +75,26 @@ export class HAClient {
       options.body = JSON.stringify(parameters);
     } else if (parameters && method === 'GET') {
       const queryParams = new URLSearchParams(parameters);
-      const fullUrl = `${url}?${queryParams}`;
-      const response = await fetch(fullUrl, options);
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      return await response.json();
+      url = `${url}?${queryParams}`;
+    }
+
+    if (this.verbose) {
+      console.error(`[HTTP] --> ${method} ${url}`, options.body ?? '');
     }
 
     const response = await fetch(url, options);
     if (!response.ok) {
+      if (this.verbose) {
+        console.error(`[HTTP] <-- ${method} ${url} ${response.status} ${response.statusText}`);
+      }
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
-    return await response.json();
+
+    const json = await response.json();
+    if (this.verbose) {
+      console.error(`[HTTP] <-- ${method} ${url} ${response.status}`, JSON.stringify(json));
+    }
+    return json;
   }
 
   async createOrUpdateAutomation(id: string, config: object): Promise<any> {

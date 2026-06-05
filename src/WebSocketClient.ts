@@ -4,12 +4,17 @@ export class WebSocketClient {
   private ws: WebSocket;
   private messageQueue: string[] = [];
   private waiters: Array<(msg: string) => void> = [];
+  private verbose: boolean;
 
-  constructor(url: string) {
+  constructor(url: string, verbose: boolean = false) {
+    this.verbose = verbose;
     this.ws = new WebSocket(url);
 
     this.ws.on('message', (data: WebSocket.Data) => {
       const msg = data.toString();
+      if (this.verbose) {
+        console.error('[WS] <--', msg);
+      }
 
       if (this.waiters.length > 0) {
         const resolve = this.waiters.shift()!;
@@ -35,12 +40,12 @@ export class WebSocketClient {
     this.ws.close();
   }
 
-  sendRaw(data: string): void {
-    this.ws.send(data);
-  }
-
   send(data: object): void {
-    this.ws.send(JSON.stringify(data));
+    const serialized = JSON.stringify(data);
+    if (this.verbose) {
+      console.error('[WS] -->', serialized);
+    }
+    this.ws.send(serialized);
   }
 
   async recvRaw(): Promise<string> {

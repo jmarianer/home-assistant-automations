@@ -11,7 +11,7 @@ async function connect(): Promise<HAClient> {
     process.exit(1);
   }
 
-  ha = new HAClient(options.baseUrl, options.token);
+  ha = new HAClient(options.baseUrl, options.token, options.verbose);
   await ha.connect();
   console.log('Connected to Home Assistant');
 
@@ -24,7 +24,8 @@ program
   .description('Home Assistant automations management')
   .version('1.0.0')
   .option('--base-url <url>', 'Home Assistant base URL', process.env.HA_BASE_URL || 'http://homeassistant.local:8123')
-  .option('--token <token>', 'Home Assistant long-lived access token', process.env.HA_TOKEN);
+  .option('--token <token>', 'Home Assistant long-lived access token', process.env.HA_TOKEN)
+  .option('--verbose', 'Log HTTP and WebSocket requests and responses', false);
 
 program
   .command('deploy')

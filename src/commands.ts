@@ -29,36 +29,36 @@ export async function runDeploy(ha: HAClient): Promise<void> {
   const existingAutomations = await getExistingAutomationNames(ha);
   for (const id of existingAutomations) {
     console.log(`Removing existing automation ${id}...`);
-    console.log(await ha.removeEntity(id));
+    await ha.removeEntity(id);
   }
 
   const newAutomations = await evaluator.getAutomations();
   for (const [id, automation] of Object.entries(newAutomations)) {
     console.log(`Deploying automation ${id}...`);
-    console.log(await ha.createOrUpdateAutomation(id, automation));
+    await ha.createOrUpdateAutomation(id, automation);
   }
 
   const existingHelpers = await getExistingHelpers(ha);
   for (const id of Object.keys(existingHelpers)) {
     console.log(`Removing existing helper ${id}...`);
-    console.log(await ha.removeHelper(id));
+    await ha.removeHelper(id);
   }
 
   const newHelpers = await evaluator.getHelpers();
   for (const [id, helper] of Object.entries(newHelpers)) {
     console.log(`Deploying helper ${id}...`);
-    console.log(await ha.createHelper(id, helper));
+    await ha.createHelper(id, helper);
   }
 
   const existingTemplates = await getExistingTemplates(ha);
   for (const id of Object.keys(existingTemplates)) {
     console.log(`Removing existing template ${id}...`);
-    console.log(await ha.removeTemplate(id));
+    await ha.removeTemplate(id);
   }
 
   const newTemplates = await evaluator.getTemplates();
   for (const [id, template] of Object.entries(newTemplates)) {
     console.log(`Deploying template ${id}...`);
-    console.log(await ha.createTemplate(template));
+    await ha.createTemplate(template);
   }
 }
