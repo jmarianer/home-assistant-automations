@@ -127,6 +127,15 @@ local gradual_raise(time_in_seconds) = [
       ha.actions.switch_off('switch.garage_main_lights'),
     ]
   ),
+  ha.automation(
+    'High CO2 Alert',
+    ha.triggers.numeric_state('sensor.aranet4_04f8f_carbon_dioxide', above=700),
+    ha.actions.notify(
+      'joeym_iphone',
+      'CO₂ is {{ states("sensor.aranet4_04f8f_carbon_dioxide") }} ppm — time to open a window.',
+      'High CO₂',
+    ),
+  ),
 # This doesn't wake me up and it wakes my wife up too early. Experiment tried,
 # lesson learned. :)
 # ha.automation(

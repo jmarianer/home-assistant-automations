@@ -26,6 +26,12 @@ local normalize = function(value)
         type: 'press',
         subtype: id_parts[std.length(id_parts) - 1],
       },
+    numeric_state(entity_id, above=null, below=null):: {
+      trigger: 'numeric_state',
+      entity_id: entity_id,
+      [if above != null then 'above']: above,
+      [if below != null then 'below']: below,
+    },
   },
 
   actions: {
@@ -92,6 +98,10 @@ local normalize = function(value)
     _if(condition, then_action):: {
       'if': [condition],
       'then': then_action,
+    },
+    notify(target, message, title=null):: {
+      action: 'notify.' + target,
+      data: { message: message } + (if title != null then { title: title } else {}),
     },
   },
 
