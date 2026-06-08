@@ -28,7 +28,8 @@ local gradual_raise(time_in_seconds) = [
 [
   ha.boolean_helper('Light Raise Active', false, 'Indicates whether the gradual light raise is active.'),
   ha.time_helper('Wake Up', 'Time for triggering the sunrise alarm automation.'),
-  ha.template_helper('Roborock Cleaning Time', "{% set t = states('sensor.s7_max_ultra_cleaning_time') | int(0) %} {{ (t // 60) }}m {{ (t % 60) }}s", 'mdi:robot-vacuum'),
+  ha.template_helper('Roborock Cleaning Time', "{% set t = states('sensor.s7_max_ultra_cleaning_time') | int(0) %} {{ (t // 60) }}m {{ (t % 60) }}s"),
+  ha.template_helper('Dishwasher Time Remaining', "{% set t = states('sensor.dishwasher_remaining_time') | int(0) %} {{ (t // 60) }}h {{ (t % 60) }}m"),
   ha.automation(
     'Car pico favorite pressed',
     ha.triggers.lutron_press('button.car_pico_stop'),
