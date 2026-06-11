@@ -22,6 +22,7 @@ export class Templates {
       const id = `sensor.${slug(entry.title, '_')}`;
       templates[id] = {
         name: entry.title,
+        entry_id: entryId,
         id,
         ...Object.fromEntries(
           response.data_schema.map((item: any) => {
@@ -49,9 +50,6 @@ export class Templates {
   }
 
   async remove(entry_id: string): Promise<any> {
-    return await this.transport.getResponse({
-      type: 'config_entries/remove',
-      entry_id,
-    });
+    return await this.transport.callApi('DELETE', `/api/config/config_entries/entry/${entry_id}`);
   }
 }

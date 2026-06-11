@@ -54,9 +54,9 @@ export async function runDeploy(ha: HAClient): Promise<void> {
   }
 
   const existingTemplates = await ha.templates.list();
-  for (const id of Object.keys(existingTemplates)) {
+  for (const [id, template] of Object.entries(existingTemplates)) {
     console.log(`Removing existing template ${id}...`);
-    await ha.templates.remove(id);
+    await ha.templates.remove(template.entry_id);
   }
 
   const newTemplates = await evaluator.getTemplates();
