@@ -146,4 +146,40 @@ local gradual_raise(time_in_seconds) = [
 #   },
 #   gradual_raise(1800),
 # ),
+  ha.dashboard('Joey', 'dashboard-joey', [
+    {
+      icon: 'mdi:home',
+      path: 'overview',
+      type: 'sections',
+      max_columns: 3,
+      sections: [
+        {
+          column_span: 3,
+          type: 'grid',
+          cards: [
+            ha.tile('lock.front_door_lock'),
+            ha.tile('sensor.dishwasher_time_remaining', 'none'),
+            ha.home_summary('light', { action: 'navigate', navigation_path: '/light' }),
+            ha.tile('weather.forecast_home', action='none', name='Weather'),
+            ha.tile('button.s7_max_ultra_after_meals',
+              name='Show Everything',
+              icon='mdi:view-dashboard',
+              action={ action: 'navigate', navigation_path: '/dashboard-everything/' },
+            ),
+          ],
+        },
+        {
+          column_span: 3,
+          type: 'grid',
+          cards: [
+            ha.heading('Roborock', 'title'),
+            ha.tile('button.s7_max_ultra_after_meals', columns=18, name={ type: 'entity' }),
+            ha.tile('button.s7_max_ultra_full_cleaning', columns=18, name={ type: 'entity' }),
+            ha.tile('sensor.s7_max_ultra_cleaning_progress', action='none', columns=18, name={ type: 'entity' }),
+            ha.tile('sensor.roborock_cleaning_time', action='none', columns=18),
+          ],
+        },
+      ],
+    },
+  ]),
 ]

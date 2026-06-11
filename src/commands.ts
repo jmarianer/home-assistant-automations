@@ -19,6 +19,11 @@ export async function runDiff(ha: HAClient): Promise<void> {
   const newTemplates = await evaluator.getTemplates();
   console.log('Diff between existing and generated templates:');
   console.log(await jdDiff(JSON.stringify(existingTemplates), JSON.stringify(newTemplates)));
+
+  const newDashboards = await evaluator.getDashboards();
+  const existingDashboards = await ha.dashboards.list();
+  console.log('Diff between existing and generated dashboards:');
+  console.log(await jdDiff(JSON.stringify(existingDashboards), JSON.stringify(newDashboards)));
 }
 
 export async function runDeploy(ha: HAClient): Promise<void> {
@@ -58,5 +63,18 @@ export async function runDeploy(ha: HAClient): Promise<void> {
   for (const [id, template] of Object.entries(newTemplates)) {
     console.log(`Deploying template ${id}...`);
     await ha.templates.create(template);
+  }
+
+  const existingDashboards = await ha.dashboards.list();
+  for (const dashboard of Object.values(existingDashboards)) {
+    console.log(`Removing existing dashboard ${dashboard.url_path}...`);
+    await ha.dashboards.remove(dashboard.id);
+  }
+
+  const newDashboards = await evaluator.getDashboards();
+  for (const dashboard of Object.values(newDashboards)) {
+    console.log(`Deploying dashboard ${dashboard.url_path}...`);
+    await ha.dashboards.create({ url_path: dashboard.url_path, title: dashboard.title, icon: dashboard.icon });
+    await ha.dashboards.saveConfig(dashboard.url_path, { views: dashboard.views });
   }
 }

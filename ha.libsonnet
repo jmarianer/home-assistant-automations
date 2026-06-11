@@ -132,4 +132,42 @@ local normalize = function(value)
     name: name,
     state: template,
   },
+
+  dashboard(title, url_path, views, icon=null):: {
+    id: 'dashboard.' + url_path,
+    url_path: url_path,
+    title: title,
+    [if icon != null then 'icon']: icon,
+    views: normalize(views),
+  },
+
+  heading(text, style):: {
+    type: 'heading',
+    heading: text,
+    heading_style: style,
+  },
+
+  tile(entity, action='toggle', name=null, icon=null, columns='full')::
+    local tap = if std.isString(action)
+                then { action: action }
+                else action;
+    {
+      type: 'tile',
+      entity: entity,
+      grid_options: { columns: columns },
+      show_entity_picture: true,
+      vertical: false,
+      tap_action: tap,
+      icon_tap_action: tap,
+      features_position: 'bottom',
+      [if name != null then 'name']: name,
+      [if icon != null then 'icon']: icon,
+    },
+
+    home_summary(summary, tap_action, columns='full'):: {
+      type: 'home-summary',
+      summary: summary,
+      tap_action: tap_action,
+      grid_options: { columns: columns },
+    },
 }

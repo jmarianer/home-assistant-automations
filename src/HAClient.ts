@@ -2,6 +2,7 @@ import { Transport } from './Transport.js';
 import { Automations } from './Automations.js';
 import { Helpers } from './Helpers.js';
 import { Templates } from './Templates.js';
+import { Dashboards } from './Dashboards.js';
 
 /**
  * Facade over a {@link Transport}, exposing each Home Assistant resource as
@@ -12,12 +13,14 @@ export class HAClient {
   readonly automations: Automations;
   readonly helpers: Helpers;
   readonly templates: Templates;
+  readonly dashboards: Dashboards;
 
   constructor(baseUrl: string, token: string, verbose: boolean = false) {
     this.transport = new Transport(baseUrl, token, verbose);
     this.automations = new Automations(this.transport);
     this.helpers = new Helpers(this.transport);
     this.templates = new Templates(this.transport);
+    this.dashboards = new Dashboards(this.transport);
   }
 
   connect() {
