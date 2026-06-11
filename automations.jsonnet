@@ -131,7 +131,7 @@ local gradual_raise(time_in_seconds) = [
     'High CO2 Alert',
     ha.triggers.numeric_state('sensor.aranet4_04f8f_carbon_dioxide', above=700),
     ha.actions.notify(
-      'joeym_iphone',
+      'mobile_app_joeym_iphone',
       'CO₂ is {{ states("sensor.aranet4_04f8f_carbon_dioxide") }} ppm — time to open a window.',
       'High CO₂',
     ),
