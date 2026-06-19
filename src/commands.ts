@@ -1,5 +1,5 @@
 import { HAClient } from './HAClient.js';
-import { jdDiff } from './jdDiff.js';
+import { jsonDiff } from './jsonDiff.js';
 import { JsonnetEvaluator } from './JsonnetEvaluator.js';
 
 export async function runDiff(ha: HAClient): Promise<void> {
@@ -8,22 +8,22 @@ export async function runDiff(ha: HAClient): Promise<void> {
   const existingAutomations = await ha.automations.list();
   const newAutomations = await evaluator.getAutomations();
   console.log('Diff between existing and generated automations:');
-  console.log(await jdDiff(JSON.stringify(existingAutomations), JSON.stringify(newAutomations)));
+  console.log(await jsonDiff(existingAutomations, newAutomations));
 
   const existingHelpers = await ha.helpers.list();
   const newHelpers = await evaluator.getHelpers();
   console.log('Diff between existing and generated helpers:');
-  console.log(await jdDiff(JSON.stringify(existingHelpers), JSON.stringify(newHelpers)));
+  console.log(await jsonDiff(existingHelpers, newHelpers));
 
   const existingTemplates = await ha.templates.list();
   const newTemplates = await evaluator.getTemplates();
   console.log('Diff between existing and generated templates:');
-  console.log(await jdDiff(JSON.stringify(existingTemplates), JSON.stringify(newTemplates)));
+  console.log(await jsonDiff(existingTemplates, newTemplates));
 
   const newDashboards = await evaluator.getDashboards();
   const existingDashboards = await ha.dashboards.list();
   console.log('Diff between existing and generated dashboards:');
-  console.log(await jdDiff(JSON.stringify(existingDashboards), JSON.stringify(newDashboards)));
+  console.log(await jsonDiff(existingDashboards, newDashboards));
 }
 
 export async function runDeploy(ha: HAClient): Promise<void> {
