@@ -32,6 +32,12 @@ local normalize = function(value)
       [if above != null then 'above']: above,
       [if below != null then 'below']: below,
     },
+    state(entity_id, to=null, from=null):: {
+      trigger: 'state',
+      entity_id: entity_id,
+      [if to != null then 'to']: to,
+      [if from != null then 'from']: from,
+    },
   },
 
   actions: {
@@ -105,14 +111,14 @@ local normalize = function(value)
     },
   },
 
-  automation(alias, trigger, action):: {
+  automation(alias, trigger, action, mode='single'):: {
     alias: alias,
     id: 'automation.' + std.native('slug')(alias),
     triggers: normalize(trigger),
     actions: normalize(action),
     conditions: [],
     description: '',
-    mode: 'single',
+    mode: mode,
   },
 
   boolean_helper(name, default, _description):: {

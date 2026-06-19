@@ -128,11 +128,29 @@ local gradual_raise(time_in_seconds) = [
     ]
   ),
   ha.automation(
+    'Garage Light Auto-Off',
+    ha.triggers.state('switch.garage_main_lights', to='on'),
+    [
+      ha.actions.delay(300),
+      ha.actions.switch_off('switch.garage_main_lights'),
+    ],
+    mode='restart',
+  ),
+  ha.automation(
+    'High CO2 Alert',
+    ha.triggers.numeric_state('sensor.bedroom_bedroom_co2_monitor_carbon_dioxide', above=700),
+    ha.actions.notify(
+      'mobile_app_joeym_iphone',
+      'CO₂ is {{ states("sensor.bedroom_bedroom_co2_monitor_carbon_dioxide") }} ppm in the bedroom — time to open a window.',
+      'High CO₂',
+    ),
+  ),
+  ha.automation(
     'High CO2 Alert',
     ha.triggers.numeric_state('sensor.aranet4_04f8f_carbon_dioxide', above=700),
     ha.actions.notify(
       'mobile_app_joeym_iphone',
-      'CO₂ is {{ states("sensor.aranet4_04f8f_carbon_dioxide") }} ppm — time to open a window.',
+      'CO₂ is {{ states("sensor.aranet4_04f8f_carbon_dioxide") }} ppm in the office — time to open a window.',
       'High CO₂',
     ),
   ),
