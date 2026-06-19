@@ -128,7 +128,7 @@ local gradual_raise(time_in_seconds) = [
     ]
   ),
   ha.automation(
-    'Garage Light Auto-Off',
+    'Garage Light Auto Off',
     ha.triggers.state('switch.garage_main_lights', to='on'),
     [
       ha.actions.delay(300),
