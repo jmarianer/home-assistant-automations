@@ -137,7 +137,7 @@ local gradual_raise(time_in_seconds) = [
     mode='restart',
   ),
   ha.automation(
-    'High CO2 Alert',
+    'High CO2 Alert (bedroom)',
     ha.triggers.numeric_state('sensor.bedroom_bedroom_co2_monitor_carbon_dioxide', above=700),
     ha.actions.notify(
       'mobile_app_joeym_iphone',
@@ -146,7 +146,7 @@ local gradual_raise(time_in_seconds) = [
     ),
   ),
   ha.automation(
-    'High CO2 Alert',
+    'High CO2 Alert (office)',
     ha.triggers.numeric_state('sensor.aranet4_04f8f_carbon_dioxide', above=700),
     ha.actions.notify(
       'mobile_app_joeym_iphone',
