@@ -117,7 +117,7 @@ local gradual_raise(time_in_seconds) = [
       ha.triggers.lutron_press('button.master_bedroom_remote_by_bed_1_raise'),
       ha.triggers.lutron_press('button.master_bedroom_remote_by_bed_2_raise'),
     ],
-    gradual_raise(30),
+    gradual_raise(90),
   ),
   ha.automation(
     'Car remote "lower"',
@@ -138,7 +138,7 @@ local gradual_raise(time_in_seconds) = [
   ),
   ha.automation(
     'High CO2 Alert (bedroom)',
-    ha.triggers.numeric_state('sensor.bedroom_bedroom_co2_monitor_carbon_dioxide', above=700),
+    ha.triggers.numeric_state('sensor.bedroom_bedroom_co2_monitor_carbon_dioxide', above=1500),
     ha.actions.notify(
       'mobile_app_joeym_iphone',
       'CO₂ is {{ states("sensor.bedroom_bedroom_co2_monitor_carbon_dioxide") }} ppm in the bedroom — time to open a window.',
