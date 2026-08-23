@@ -25,6 +25,70 @@ local gradual_raise(time_in_seconds) = [
   ha.actions.input_boolean('input_boolean.light_raise_active', 'turn_off'),
 ];
 
+local flair_zones = [
+  { name: "Angela's Office", slug: 'angelas_office' },
+  { name: 'Bedroom', slug: 'bedroom' },
+  { name: 'Hallway', slug: 'hallway' },
+  { name: "Joey's Office", slug: 'joeys_office' },
+  { name: 'Living Room', slug: 'living_room' },
+];
+
+local flair_zone_card(zone) =
+  local climate = 'climate.' + zone.slug + '_room';
+  local presence = 'select.' + zone.slug + '_activity_status';
+  {
+    type: 'tile',
+    entity: climate,
+    name: zone.name,
+    vertical: false,
+    grid_options: { columns: 12 },
+    features_position: 'inline',
+    features: [
+      {
+        type: 'custom:service-call',
+        entries: [
+          {
+            type: 'spinbox',
+            entity_id: climate,
+            value_attribute: 'temperature',
+            icon: '',
+            autofill_entity_id: false,
+            label: '{{ value | float }}',
+            step: 1,
+            range: [
+              '{{ state_attr("%s", "min_temp") }}' % climate,
+              '{{ state_attr("%s", "max_temp") }}' % climate,
+            ],
+            hold_action: { action: 'repeat' },
+            tap_action: {
+              action: 'perform-action',
+              perform_action: 'climate.set_temperature',
+              target: { entity_id: climate },
+              data: { temperature: '{{ value | float }}' },
+            },
+          },
+          {
+            type: 'toggle',
+            thumb: 'md3-switch',
+            entity_id: presence,
+            value_attribute: 'state',
+            autofill_entity_id: false,
+            checked_values: ['Active'],
+            checked_icon: 'mdi:account-check',
+            unchecked_icon: 'mdi:account-off',
+            tap_action: {
+              action: 'perform-action',
+              perform_action: 'select.select_option',
+              target: { entity_id: presence },
+              data: { option: "{{ 'Active' if checked else 'Inactive' }}" },
+            },
+            styles: ':host { flex-basis: 50%; }',
+          },
+        ],
+      },
+    ],
+  };
+
 [
   ha.boolean_helper('Light Raise Active', false, 'Indicates whether the gradual light raise is active.'),
   ha.time_helper('Wake Up', 'Time for triggering the sunrise alarm automation.'),
@@ -190,6 +254,13 @@ local gradual_raise(time_in_seconds) = [
             ha.tile('sensor.s7_max_ultra_cleaning_progress', action='none', name={ type: 'entity' }),
             ha.tile('sensor.roborock_cleaning_time', action='none'),
           ],
+        },
+        {
+          column_span: 2,
+          type: 'grid',
+          cards:
+           [ha.heading('Flair', 'title')] +
+           [flair_zone_card(zone) for zone in flair_zones],
         },
       ],
     },
