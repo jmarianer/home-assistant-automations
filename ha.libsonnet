@@ -170,10 +170,19 @@ local normalize = function(value)
       [if icon != null then 'icon']: icon,
     },
 
-    home_summary(summary, tap_action, columns='full'):: {
-      type: 'home-summary',
-      summary: summary,
-      tap_action: tap_action,
-      grid_options: { columns: columns },
-    },
+  home_summary(summary, tap_action, columns='full'):: {
+    type: 'home-summary',
+    summary: summary,
+    tap_action: tap_action,
+    grid_options: { columns: columns },
+  },
+
+  template(icon, primary, secondary, columns='full'):: {
+    type: 'custom:mushroom-template-card',
+    grid_options: { columns: columns, },
+    icon: icon,
+    icon_color: 'blue',
+    primary: primary,
+    secondary: secondary,
+  }
 }

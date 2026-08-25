@@ -41,7 +41,7 @@ local flair_zone_card(zone) =
     entity: climate,
     name: zone.name,
     vertical: false,
-    grid_options: { columns: 12 },
+    grid_options: { columns: 'full' },
     features_position: 'inline',
     features: [
       {
@@ -92,8 +92,6 @@ local flair_zone_card(zone) =
 [
   ha.boolean_helper('Light Raise Active', false, 'Indicates whether the gradual light raise is active.'),
   ha.time_helper('Wake Up', 'Time for triggering the sunrise alarm automation.'),
-  ha.template_helper('Roborock Cleaning Time', "{% set t = states('sensor.s7_max_ultra_cleaning_time') | int(0) %} {{ (t // 60) }}m {{ (t % 60) }}s"),
-  ha.template_helper('Dishwasher Time Remaining', "{% set t = states('sensor.dishwasher_remaining_time') | int(0) %} {{ (t // 60) }}h {{ (t % 60) }}m"),
   ha.automation(
     'Car pico favorite pressed',
     ha.triggers.lutron_press('button.car_pico_stop'),
@@ -240,7 +238,11 @@ local flair_zone_card(zone) =
           type: 'grid',
           cards: [
             ha.tile('lock.front_door_lock'),
-            ha.tile('sensor.dishwasher_time_remaining', 'none'),
+            ha.template(
+              'mdi:dishwasher',
+              'Dishwasher time remaining', 
+              "{% set t = states('sensor.dishwasher_remaining_time') | int(0) %} {{ (t // 60) }}h {{ (t % 60) }}m",
+            ),
             ha.tile('weather.forecast_home', action='none', name='Weather'),
           ],
         },
@@ -251,8 +253,11 @@ local flair_zone_card(zone) =
             ha.heading('Roborock', 'title'),
             ha.tile('button.s7_max_ultra_after_meals', columns=6, name={ type: 'entity' }),
             ha.tile('button.s7_max_ultra_full_cleaning', columns=6, name={ type: 'entity' }),
-            ha.tile('sensor.s7_max_ultra_cleaning_progress', action='none', name={ type: 'entity' }),
-            ha.tile('sensor.roborock_cleaning_time', action='none'),
+            ha.template(
+              'mdi:robot-vacuum',
+              "{% set t = states('sensor.s7_max_ultra_cleaning_time') | int(0) %} {% set p = states('sensor.s7_max_ultra_cleaning_progress') | int(0) %} {% set r = (t / p * (100 - p)) | int(0) if p > 0 else 0 %} {{ (t // 60) }}m {{ (t % 60) }}s elapsed · {{ (r // 60) }}m {{ (r % 60) }}s remaining",
+              "{{ states('sensor.s7_max_ultra_cleaning_progress') }}% complete",
+            ),
           ],
         },
         {
