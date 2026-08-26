@@ -36,6 +36,11 @@ local flair_zones = [
 local flair_zone_card(zone) =
   local climate = 'climate.' + zone.slug + '_room';
   local presence = 'select.' + zone.slug + '_activity_status';
+  local toggle_presence = {
+    action: 'perform-action',
+    perform_action: 'select.select_next',
+    target: { entity_id: presence },
+  };
   {
     type: 'tile',
     entity: climate,
@@ -43,6 +48,8 @@ local flair_zone_card(zone) =
     vertical: false,
     grid_options: { columns: 'full' },
     features_position: 'inline',
+    tap_action: toggle_presence,
+    icon_tap_action: toggle_presence,
     features: [
       {
         type: 'custom:service-call',
@@ -76,12 +83,7 @@ local flair_zone_card(zone) =
             checked_values: ['Active'],
             checked_icon: 'mdi:account-check',
             unchecked_icon: 'mdi:account-off',
-            tap_action: {
-              action: 'perform-action',
-              perform_action: 'select.select_option',
-              target: { entity_id: presence },
-              data: { option: "{{ 'Active' if checked else 'Inactive' }}" },
-            },
+            tap_action: toggle_presence,
             styles: ':host { flex-basis: 50%; }',
           },
         ],
@@ -261,7 +263,7 @@ local flair_zone_card(zone) =
           ],
         },
         {
-          column_span: 2,
+          column_span: 3,
           type: 'grid',
           cards:
            [ha.heading('Flair', 'title')] +
