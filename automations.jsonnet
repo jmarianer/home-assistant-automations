@@ -33,6 +33,18 @@ local flair_zones = [
   { name: 'Living Room', slug: 'living_room' },
 ];
 
+local home_structure_hvac_mode_button(icon, mode, color) = {
+  type: 'button',
+  icon: icon,
+  styles: "{%% if is_state('climate.home_structure', '%s') %%}*{background-color: %s}{%% endif %%}" % [mode, color],
+  tap_action: {
+    action: 'perform-action',
+    perform_action: 'climate.set_hvac_mode',
+    target: { entity_id: 'climate.home_structure' },
+    data: { hvac_mode: mode },
+  },
+};
+
 local flair_zone_card(zone) =
   local climate = 'climate.' + zone.slug + '_room';
   local presence = 'select.' + zone.slug + '_activity_status';
@@ -236,7 +248,7 @@ local flair_zone_card(zone) =
       max_columns: 3,
       sections: [
         {
-          column_span: 3,
+          column_span: 1,
           type: 'grid',
           cards: [
             ha.tile('lock.front_door_lock'),
@@ -249,7 +261,7 @@ local flair_zone_card(zone) =
           ],
         },
         {
-          column_span: 3,
+          column_span: 1,
           type: 'grid',
           cards: [
             ha.heading('Roborock', 'title'),
@@ -263,10 +275,30 @@ local flair_zone_card(zone) =
           ],
         },
         {
-          column_span: 3,
+          column_span: 1,
           type: 'grid',
           cards:
            [ha.heading('Flair', 'title')] +
+           [{
+             type: 'custom:service-call',
+             grid_options: { columns: 'full' },
+             styles: |||
+               :host {
+                 display: block;
+                 background: var(--ha-card-background, var(--card-background-color, white));
+                 border-radius: var(--ha-card-border-radius, 12px);
+                 border: var(--ha-card-border-width, 1px) solid var(--ha-card-border-color, var(--divider-color, #e0e0e0));
+                 box-shadow: var(--ha-card-box-shadow, none);
+                 padding: 12px;
+               }
+             |||,
+             entries: [
+               home_structure_hvac_mode_button('mdi:sun-snowflake-variant', 'heat_cool', 'var(--state-climate-heat-cool-color)'),
+               home_structure_hvac_mode_button('mdi:fire', 'heat', 'var(--state-climate-heat-color)'),
+               home_structure_hvac_mode_button('mdi:snowflake', 'cool', 'var(--state-climate-cool-color)'),
+               home_structure_hvac_mode_button('mdi:power', 'off', 'var(--state-active-color)'),
+             ],
+           }] +
            [flair_zone_card(zone) for zone in flair_zones],
         },
       ],
