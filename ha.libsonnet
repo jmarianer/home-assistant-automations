@@ -66,7 +66,7 @@ local normalize = function(value)
       entity_id: entities_by_id[entity_id].id,
       type: 'turn_off',
     },
-     unlock(entity_id):: {
+    unlock(entity_id):: {
       device_id: entities_by_id[entity_id].device_id,
       domain: 'lock',
       entity_id: entities_by_id[entity_id].id,
@@ -153,7 +153,7 @@ local normalize = function(value)
     heading_style: style,
   },
 
-  tile(entity, action='toggle', name=null, icon=null, columns='full')::
+  tile(entity, action='toggle', name=null, icon=null, columns='full', additional_controls=null, features_position='bottom')::
     local tap = if std.isString(action)
                 then { action: action }
                 else action;
@@ -165,10 +165,53 @@ local normalize = function(value)
       vertical: false,
       tap_action: tap,
       icon_tap_action: tap,
-      features_position: 'bottom',
+      features_position: features_position,
       [if name != null then 'name']: name,
       [if icon != null then 'icon']: icon,
+      [if additional_controls != null then 'features']: [
+        { type: 'custom:service-call', entries: additional_controls },
+      ],
     },
+
+  perform_action(action, entity_id, data=null):: {
+    action: 'perform-action',
+    perform_action: action,
+    target: { entity_id: entity_id },
+    [if data != null then 'data']: data,
+  },
+
+  button(icon, tap_action, styles=null):: {
+    type: 'button',
+    icon: icon,
+    tap_action: tap_action,
+    [if styles != null then 'styles']: styles,
+  },
+
+  spinbox(entity_id, value_attribute, tap_action, range, step=1, label='{{ value | float }}'):: {
+    type: 'spinbox',
+    entity_id: entity_id,
+    value_attribute: value_attribute,
+    icon: '',
+    autofill_entity_id: false,
+    label: label,
+    step: step,
+    range: range,
+    hold_action: { action: 'repeat' },
+    tap_action: tap_action,
+  },
+
+  toggle(entity_id, tap_action, checked_values, checked_icon=null, unchecked_icon=null, styles=null):: {
+    type: 'toggle',
+    thumb: 'md3-switch',
+    entity_id: entity_id,
+    value_attribute: 'state',
+    autofill_entity_id: false,
+    checked_values: checked_values,
+    [if checked_icon != null then 'checked_icon']: checked_icon,
+    [if unchecked_icon != null then 'unchecked_icon']: unchecked_icon,
+    tap_action: tap_action,
+    [if styles != null then 'styles']: styles,
+  },
 
   home_summary(summary, tap_action, columns='full'):: {
     type: 'home-summary',

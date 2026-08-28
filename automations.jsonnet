@@ -33,75 +33,41 @@ local flair_zones = [
   { name: 'Living Room', slug: 'living_room' },
 ];
 
-local home_structure_hvac_mode_button(icon, mode, color) = {
-  type: 'button',
-  icon: icon,
-  styles: "{%% if is_state('climate.home_structure', '%s') %%}*{background-color: %s}{%% endif %%}" % [mode, color],
-  tap_action: {
-    action: 'perform-action',
-    perform_action: 'climate.set_hvac_mode',
-    target: { entity_id: 'climate.home_structure' },
-    data: { hvac_mode: mode },
-  },
-};
+local home_structure_hvac_mode_button(icon, mode, color) = ha.button(
+  icon,
+  ha.perform_action('climate.set_hvac_mode', 'climate.home_structure', { hvac_mode: mode }),
+  styles="{%% if is_state('climate.home_structure', '%s') %%}*{background-color: %s}{%% endif %%}" % [mode, color],
+);
 
 local flair_zone_card(zone) =
   local climate = 'climate.' + zone.slug + '_room';
   local presence = 'select.' + zone.slug + '_activity_status';
-  local toggle_presence = {
-    action: 'perform-action',
-    perform_action: 'select.select_next',
-    target: { entity_id: presence },
-  };
-  {
-    type: 'tile',
-    entity: climate,
-    name: zone.name,
-    vertical: false,
-    grid_options: { columns: 'full' },
-    features_position: 'inline',
-    tap_action: toggle_presence,
-    icon_tap_action: toggle_presence,
-    features: [
-      {
-        type: 'custom:service-call',
-        entries: [
-          {
-            type: 'spinbox',
-            entity_id: climate,
-            value_attribute: 'temperature',
-            icon: '',
-            autofill_entity_id: false,
-            label: '{{ value | float }}',
-            step: 1,
-            range: [
-              '{{ state_attr("%s", "min_temp") }}' % climate,
-              '{{ state_attr("%s", "max_temp") }}' % climate,
-            ],
-            hold_action: { action: 'repeat' },
-            tap_action: {
-              action: 'perform-action',
-              perform_action: 'climate.set_temperature',
-              target: { entity_id: climate },
-              data: { temperature: '{{ value | float }}' },
-            },
-          },
-          {
-            type: 'toggle',
-            thumb: 'md3-switch',
-            entity_id: presence,
-            value_attribute: 'state',
-            autofill_entity_id: false,
-            checked_values: ['Active'],
-            checked_icon: 'mdi:account-check',
-            unchecked_icon: 'mdi:account-off',
-            tap_action: toggle_presence,
-            styles: ':host { flex-basis: 50%; }',
-          },
+  local toggle_presence = ha.perform_action('select.select_next', presence);
+  ha.tile(
+    climate,
+    action=toggle_presence,
+    name=zone.name,
+    features_position='inline',
+    additional_controls=[
+      ha.spinbox(
+        climate,
+        'temperature',
+        ha.perform_action('climate.set_temperature', climate, { temperature: '{{ value | float }}' }),
+        [
+          '{{ state_attr("%s", "min_temp") }}' % climate,
+          '{{ state_attr("%s", "max_temp") }}' % climate,
         ],
-      },
+      ),
+      ha.toggle(
+        presence,
+        toggle_presence,
+        ['Active'],
+        checked_icon='mdi:account-check',
+        unchecked_icon='mdi:account-off',
+        styles=':host { flex-basis: 50%; }',
+      ),
     ],
-  };
+  );
 
 [
   ha.boolean_helper('Light Raise Active', false, 'Indicates whether the gradual light raise is active.'),
